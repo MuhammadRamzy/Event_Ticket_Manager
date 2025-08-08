@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Verification - Scanner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        #reader {
+            width: 100%;
+            min-height: 300px;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        #reader video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="bg-white shadow">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Ticket Scanner</h1>
+            <a href="/logout" class="text-red-600 hover:text-red-800">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-medium text-gray-700 mb-4">Scan QR Code</h2>
+            
+            <div id="scanner-container" class="mb-4">
+                <div id="reader"></div>
+                <div id="scanner-status" class="mt-2 text-sm text-gray-500">
+                    Camera initializing...
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="manual-input" class="block text-gray-700 font-medium mb-2">Manual Ticket ID</label>
+                <div class="flex">
+                    <input type="text" id="manual-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="verify-button" class="bg-blue-600 text-white py-2 px-4 rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Verify
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="result-container" class="hidden">
+            <div id="valid-result" class="bg-green-100 border border-green-400 text-green-700 p-6 rounded-lg shadow mb-6 hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Valid Ticket</h3>
+                        <p class="mb-1"><strong>Name:</strong> <span id="valid-name"></span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="valid-email"></span></p>
+                        <p class="mb-1"><strong>Ticket ID:</strong> <span id="valid-ticket-id"></span></p>
+                        <p class="mb-3"><strong>Scan Time:</strong> <span id="valid-scan-time"></span></p>
+                    </div>
+                    <div class="text-5xl">✓</div>
+                </div>
+                <button onclick="clearResult()" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                    Scan Next
+                </button>
+            </div>
+            
+            <div id="already-scanned-result" class="bg-yellow-100 border border-yellow-400 text-yellow-700 p-6 rounded-lg shadow mb-6 hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Ticket Already Scanned</h3>
+                        <p class="mb-1"><strong>Name:</strong> <span id="already-name"></span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="already-email"></span></p>
+                        <p class="mb-1"><strong>Ticket ID:</strong> <span id="already-ticket-id"></span></p>
+                        <p class="mb-3"><strong>Previous Scan:</strong> <span id="already-scan-time"></span></p>
+                    </div>
+                    <div class="text-5xl">⚠️</div>
+                </div>
+                <button onclick="clearResult()" class="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50">
+                    Scan Next
+                </button>
+            </div>
+            
+            <div id="invalid-result" class="bg-red-100 border border-red-400 text-red-700 p-6 rounded-lg shadow mb-6 hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Invalid Ticket</h3>
+                        <p class="mb-1"><strong>Ticket ID:</strong> <span id="invalid-ticket-id"></span></p>
+                        <p class="mb-3">This ticket was not found in the system.</p>
+                    </div>
+                    <div class="text-5xl">✗</div>
+                </div>
+                <button onclick="clearResult()" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                    Scan Next
+                </button>
+            </div>
+            
+            <div id="error-result" class="bg-red-100 border border-red-400 text-red-700 p-6 rounded-lg shadow mb-6 hidden">
+                <h3 class="text-xl font-bold mb-2">Error</h3>
+                <p id="error-message" class="mb-3"></p>
+                <button onclick="clearResult()" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <script>
+        let html5QrCode;
+        let scanning = false;
+        
+        function startScanner() {
+            const statusElement = document.getElementById('scanner-status');
+            statusElement.textContent = "Initializing camera...";
+            
+            html5QrCode = new Html5Qrcode("reader");
+            
+            // Camera configuration with higher resolution
+            const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                const minEdgePercentage = 0.7; // 70% of the smaller edge
+                const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
+            };
+            
+            const config = { 
+                fps: 10, 
+                qrbox: qrboxFunction,
+                aspectRatio: 1.0,
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+            };
+            
+            // First try to get the back camera
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanProgress
+            )
+            .then(() => {
+                scanning = true;
+                statusElement.textContent = "Camera active - ready to scan QR codes";
+            })
+            .catch(err => {
+                // If back camera fails, try any available camera
+                console.error("Back camera error:", err);
+                statusElement.textContent = "Trying alternative camera...";
+                
+                html5QrCode.start(
+                    { facingMode: "user" },
+                    config,
+                    onScanSuccess,
+                    onScanProgress
+                )
+                .then(() => {
+                    scanning = true;
+                    statusElement.textContent = "Camera active - ready to scan QR codes";
+                })
+                .catch(err => {
+                    console.error("All camera error:", err);
+                    statusElement.textContent = "Camera access failed: " + err.message;
+                    document.getElementById('error-result').classList.remove('hidden');
+                    document.getElementById('error-message').textContent = 'Error accessing camera: ' + err.message;
+                    document.getElementById('result-container').classList.remove('hidden');
+                });
+            });
+        }
+        
+        function onScanSuccess(ticketId) {
+            if (scanning) {
+                scanning = false;
+                html5QrCode.pause();
+                
+                // Play a scan sound
+                playSound(true);
+                
+                // Show a brief scan indication
+                const statusElement = document.getElementById('scanner-status');
+                const originalText = statusElement.textContent;
+                statusElement.textContent = "QR Code detected! Verifying...";
+                
+                verifyTicket(ticketId);
+            }
+        }
+        
+        function onScanProgress(errorMessage) {
+            // This is called frequently and is just the scanner working, no need to show messages
+        }
+        
+        function verifyTicket(ticketId) {
+            fetch('/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ticket_id: ticketId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.valid) {
+                        document.getElementById('valid-name').textContent = data.data.name;
+                        document.getElementById('valid-email').textContent = data.data.email;
+                        document.getElementById('valid-ticket-id').textContent = data.data.ticket_id;
+                        document.getElementById('valid-scan-time').textContent = data.data.scan_time;
+                        document.getElementById('valid-result').classList.remove('hidden');
+                        
+                        // Play success sound
+                        playSound(true);
+                    } else if (data.data.already_scanned) {
+                        document.getElementById('already-name').textContent = data.data.name;
+                        document.getElementById('already-email').textContent = data.data.email;
+                        document.getElementById('already-ticket-id').textContent = data.data.ticket_id;
+                        document.getElementById('already-scan-time').textContent = data.data.scan_time;
+                        document.getElementById('already-scanned-result').classList.remove('hidden');
+                        
+                        // Play warning sound
+                        playSound(false);
+                    } else {
+                        document.getElementById('invalid-ticket-id').textContent = data.data.ticket_id;
+                        document.getElementById('invalid-result').classList.remove('hidden');
+                        
+                        // Play error sound
+                        playSound(false);
+                    }
+                } else {
+                    document.getElementById('error-message').textContent = data.message;
+                    document.getElementById('error-result').classList.remove('hidden');
+                }
+                
+                document.getElementById('result-container').classList.remove('hidden');
+            })
+            .catch(error => {
+                document.getElementById('error-message').textContent = 'Network error: ' + error;
+                document.getElementById('error-result').classList.remove('hidden');
+                document.getElementById('result-container').classList.remove('hidden');
+            });
+        }
+        
+        function clearResult() {
+            document.getElementById('valid-result').classList.add('hidden');
+            document.getElementById('already-scanned-result').classList.add('hidden');
+            document.getElementById('invalid-result').classList.add('hidden');
+            document.getElementById('error-result').classList.add('hidden');
+            document.getElementById('result-container').classList.add('hidden');
+            
+            if (html5QrCode) {
+                html5QrCode.resume();
+                scanning = true;
+                
+                // Update status message
+                const statusElement = document.getElementById('scanner-status');
+                statusElement.textContent = "Camera active - ready to scan QR codes";
+            }
+        }
+        
+        function playSound(success) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (success) {
+                // Success sound: high beep
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 880; // A5
+                gainNode.gain.value = 0.3;
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } else {
+                // Error sound: low beep
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 220; // A3
+                gainNode.gain.value = 0.3;
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            }
+        }
+        
+        // Manual verification
+        document.getElementById('verify-button').addEventListener('click', function() {
+            const ticketId = document.getElementById('manual-input').value.trim();
+            
+            if (ticketId) {
+                if (html5QrCode && scanning) {
+                    html5QrCode.pause();
+                    scanning = false;
+                }
+                
+                verifyTicket(ticketId);
+                document.getElementById('manual-input').value = '';
+            }
+        });
+        
+        // Start scanner when page loads
+        window.addEventListener('load', function() {
+            // Add a slight delay to make sure DOM is fully loaded
+            setTimeout(startScanner, 500);
+        });
+    </script>
+</body>
+</html>

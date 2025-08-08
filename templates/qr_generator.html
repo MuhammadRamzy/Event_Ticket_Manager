@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .nav-button {
+            display: inline-block;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            margin: 10px;
+        }
+
+        .nav-button:hover {
+            background-color: #374151;
+        }
+
+        .primary-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .primary-button:hover {
+            background-color: #3b5de7;
+        }
+
+        .info-text {
+            margin-bottom: 20px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-qrcode"></i> QR Code Generator</h1>
+        </header>
+
+        <div class="card">
+            <h2>Generate QR Codes for All Tickets</h2>
+            <p class="info-text">This will generate QR codes for all tickets in the current data file. You can print or
+                save these for distribution.</p>
+
+            <a href="/generate_qr_codes" class="primary-button">
+                <i class="fas fa-qrcode"></i> Generate QR Codes
+            </a>
+        </div>
+
+        <div class="card" style="text-align: center;">
+            <a href="/admin" class="nav-button">
+                <i class="fas fa-tachometer-alt"></i> Back to Admin
+            </a>
+            <a href="/scanner" class="nav-button">
+                <i class="fas fa-camera"></i> Go to Scanner
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>
+
+
+

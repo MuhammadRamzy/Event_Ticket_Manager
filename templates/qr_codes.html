@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated QR Codes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f3f4f6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .qr-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .qr-image {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 15px;
+        }
+        
+        .qr-info {
+            margin-bottom: 5px;
+        }
+        
+        .qr-uuid {
+            font-size: 0.8rem;
+            color: #6b7280;
+            word-break: break-all;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            margin: 20px auto;
+            text-align: center;
+        }
+        
+        .nav-button:hover {
+            background-color: #374151;
+        }
+        
+        .buttons-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .print-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .print-button:hover {
+            background-color: #3b5de7;
+        }
+        
+        @media print {
+            header, .buttons-container {
+                display: none;
+            }
+            
+            body {
+                background-color: white;
+            }
+            
+            .qr-card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-qrcode"></i> Generated QR Codes</h1>
+        </header>
+        
+        <div class="buttons-container">
+            <button class="print-button" onclick="window.print()">
+                <i class="fas fa-print"></i> Print QR Codes
+            </button>
+            
+            <a href="/admin" class="nav-button">
+                <i class="fas fa-tachometer-alt"></i> Back to Admin
+            </a>
+        </div>
+        
+        <div class="qr-grid">
+            {% for ticket in tickets %}
+            <div class="qr-card">
+                <img src="data:image/png;base64,{{ ticket.qr_code }}" alt="QR Code" class="qr-image">
+                <h3 class="qr-info">{{ ticket.name }}</h3>
+                <p class="qr-info">{{ ticket.email }}</p>
+                <p class="qr-uuid">ID: {{ ticket.uuid }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
